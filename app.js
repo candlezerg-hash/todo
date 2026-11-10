@@ -5,7 +5,7 @@ const account = document.createElement('section');
 account.className = 'account';
 account.innerHTML = `
   <form id="login-form" class="login-form">
-    <h3>내 계획 로그인</h3>
+    <h3>나의 숙제 노트 열기</h3>
     <label for="email">이메일</label>
     <input id="email" type="email" autocomplete="username" required>
     <label for="password">비밀번호</label>
@@ -121,3 +121,4 @@ try{
     if(!data.session)message('로그인하면 저장한 계획을 불러옵니다.');
   }).catch(()=>message('로그인 상태를 확인하지 못했습니다. 새로고침해주세요.',true));
 }catch(error){message('연결 파일을 불러오지 못했습니다. 인터넷 연결과 파일 업로드 상태를 확인해주세요.',true);controls();}
+

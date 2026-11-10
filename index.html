@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>오늘의 작은 계획</title>
+  <title>성일이의 숙제</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="config.js" defer></script>
@@ -11,10 +11,11 @@
   <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="topbar"><a href="./" class="brand"><span class="logo">↗</span> 작은 계획</a><span class="tag">나만의 하루, 한 걸음씩</span></header>
+  <header class="topbar"><a href="./" class="brand"><span class="logo">✓</span> 성일이의 숙제</a><span class="tag">오늘의 숙제, 하나씩 차근차근</span></header>
   <main>
-    <section class="intro"><p class="eyebrow">MAKE ROOM FOR TODAY</p><h1>오늘도,<br>작은 일부터.</h1><p class="description">머릿속의 할 일을 내려놓고,<br>지금 할 수 있는 하나에 집중해 보세요.</p><div class="date" id="today"></div><div class="art" aria-hidden="true"><div class="sun"></div><div class="hill back"></div><div class="hill front"></div><span class="plant">✳</span></div><p class="note">작은 완료가 모여, 좋은 하루가 됩니다.</p></section>
-    <section class="planner" aria-labelledby="list-title"><div class="planner-heading"><div><p class="eyebrow">YOUR DAILY LIST</p><h2 id="list-title">오늘의 할 일 <span id="count">0</span></h2></div><span class="pill">천천히, 꾸준히</span></div><form id="task-form"><label class="sr-only" for="task-input">새로운 할 일</label><input id="task-input" maxlength="120" placeholder="어떤 일을 해볼까요?" autocomplete="off" required><button class="add" type="submit" aria-label="할 일 추가">+</button></form><div class="progress-label"><span id="progress-text" aria-live="polite"></span><span id="percentage"></span></div><div class="progress"><div id="progress-bar"></div></div><ul id="tasks"></ul><p id="empty" hidden>계획이 비어 있어요. 작은 할 일 하나를 적어보세요.</p><footer class="list-footer"><span>계획은 이 브라우저에 저장됩니다.</span><button id="clear" type="button">완료한 일 지우기</button></footer></section>
-  </main><footer class="page-footer">A LITTLE PLAN, A BETTER DAY.<span>HTML · CSS · JavaScript / Apache</span></footer>
+    <section class="intro"><p class="eyebrow">SEONGIL HOMEWORK CLUB</p><h1>성일이의<br><em>숙제</em> 노트.</h1><p class="description">오늘 할 일을 적고, 하나씩 체크해요.<br>끝낸 만큼 가벼워지는 나의 하루.</p><div class="date" id="today"></div><div class="art" aria-hidden="true"><span class="sticker">오늘도<br>잘했어!</span><div class="mini-note"><span>MY CHECKLIST</span><div>✓ &nbsp; 하나 해내기</div><div>✓ &nbsp; 잠깐 쉬어가기</div><div>□ &nbsp; 내일도 해보기</div></div><span class="pencil">✎</span></div><p class="note">완벽하지 않아도 괜찮아. 하나씩 해보자!</p></section>
+    <section class="planner" aria-labelledby="list-title"><div class="planner-heading"><div><p class="eyebrow">TODAY HOMEWORK</p><h2 id="list-title">오늘의 숙제 <span id="count">0</span></h2></div><span class="pill">한 칸씩 클리어!</span></div><form id="task-form"><label class="sr-only" for="task-input">새로운 할 일</label><input id="task-input" maxlength="120" placeholder="오늘의 숙제를 적어주세요" autocomplete="off" required><button class="add" type="submit" aria-label="할 일 추가">+</button></form><div class="progress-label"><span id="progress-text" aria-live="polite"></span><span id="percentage"></span></div><div class="progress"><div id="progress-bar"></div></div><ul id="tasks"></ul><p id="empty" hidden>계획이 비어 있어요. 작은 할 일 하나를 적어보세요.</p><footer class="list-footer"><span>계획은 이 브라우저에 저장됩니다.</span><button id="clear" type="button">완료한 일 지우기</button></footer></section>
+  </main><footer class="page-footer">작은 체크 하나, 뿌듯한 하루.<span>성일이의 숙제 노트 · 매일 조금씩</span></footer>
 </body>
 </html>
+
