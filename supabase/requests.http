@@ -1,0 +1,56 @@
+# VS Code REST Client 또는 Postman 등으로 테스트할 요청 예제입니다.
+# 실제 비밀번호와 토큰을 이 공유 파일에 저장하지 마세요.
+@baseUrl = https://YOUR_PROJECT.supabase.co
+@publishableKey = YOUR_PUBLISHABLE_KEY
+@accessToken = USER_ACCESS_TOKEN_FROM_LOGIN
+@taskId = TASK_UUID_FROM_INSERT
+@taskDate = 2026-11-10
+
+### 1. Supabase Auth에 가입/이메일 확인한 계정으로 로그인
+POST {{baseUrl}}/auth/v1/token?grant_type=password
+apikey: {{publishableKey}}
+Content-Type: application/json
+
+{
+  "email": "YOUR_EMAIL",
+  "password": "YOUR_PASSWORD"
+}
+
+### 2. 로그인 응답의 access_token을 위 accessToken에 사용 (publishable key 아님)
+GET {{baseUrl}}/rest/v1/little_plan_tasks?select=id,text,done,task_date,created_at&task_date=eq.{{taskDate}}&order=created_at.asc,id.asc&limit=1000
+apikey: {{publishableKey}}
+Authorization: Bearer {{accessToken}}
+
+### 3. 저장. user_id는 요청한 사용자의 auth.uid()로 자동 입력
+POST {{baseUrl}}/rest/v1/little_plan_tasks
+apikey: {{publishableKey}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+Prefer: return=representation
+
+{
+  "text": "오늘 10분 산책하기",
+  "done": false,
+  "task_date": "{{taskDate}}"
+}
+
+### 4. 완료 상태 변경
+PATCH {{baseUrl}}/rest/v1/little_plan_tasks?id=eq.{{taskId}}
+apikey: {{publishableKey}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+Prefer: return=representation
+
+{"done": true}
+
+### 5. 할 일 한 개 삭제
+DELETE {{baseUrl}}/rest/v1/little_plan_tasks?id=eq.{{taskId}}
+apikey: {{publishableKey}}
+Authorization: Bearer {{accessToken}}
+Prefer: return=representation
+
+### 6. 선택한 날짜의 완료 항목만 삭제
+DELETE {{baseUrl}}/rest/v1/little_plan_tasks?task_date=eq.{{taskDate}}&done=eq.true
+apikey: {{publishableKey}}
+Authorization: Bearer {{accessToken}}
+Prefer: return=representation
