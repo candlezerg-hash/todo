@@ -1,7 +1,7 @@
 # VS Code REST Client 또는 Postman 등으로 테스트할 요청 예제입니다.
 # 실제 비밀번호와 토큰을 이 공유 파일에 저장하지 마세요.
 @baseUrl = https://YOUR_PROJECT.supabase.co
-@publishableKey = YOUR_PUBLISHABLE_KEY
+@publishableKey = sb_publishable_dUVK1DhwtLjxj-seNfBsQA_4isiBkc5
 @accessToken = USER_ACCESS_TOKEN_FROM_LOGIN
 @taskId = TASK_UUID_FROM_INSERT
 @taskDate = 2026-11-10
