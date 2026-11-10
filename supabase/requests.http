@@ -1,8 +1,8 @@
 # VS Code REST Client 또는 Postman 등으로 테스트할 요청 예제입니다.
 # 실제 비밀번호와 토큰을 이 공유 파일에 저장하지 마세요.
-@baseUrl = https://YOUR_PROJECT.supabase.co
+@baseUrl = https://zzrlikvfaizsjibocbic.supabase.co
 @publishableKey = sb_publishable_dUVK1DhwtLjxj-seNfBsQA_4isiBkc5
-@accessToken = USER_ACCESS_TOKEN_FROM_LOGIN
+@accessToken = eyJhbGciOiJFUzI1NiIsImtpZCI6IjI0MGYxOGE2LWE4ZjUtNDkyMy1hMDljLTllN2VkMGMyNDkwNSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3p6cmxpa3ZmYWl6c2ppYm9jYmljLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI4NzE2NjQ3Zi05MTA0LTRkMjEtYjlmNC02YTMzYjFlYTQ2ODUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzk0MjgyMjUxLCJpYXQiOjE3OTQyNzg2NTEsImVtYWlsIjoiY2FuZGxlemVyZ0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc5NDI3ODY1MX1dLCJzZXNzaW9uX2lkIjoiYzJmNjgwZGUtNTQ5OS00YTFhLWEzOTAtMjY5MzdkNWU0NTVmIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.Gr6CXtsH8ze8kiPCn4nstWiIqFw0YibKqUt6Noo_mbz948D4P0XC27VT03_yJf15gEHvdnIjQjH_3I1d4j-dlg
 @taskId = TASK_UUID_FROM_INSERT
 @taskDate = 2026-11-10
 
@@ -12,8 +12,8 @@ apikey: {{publishableKey}}
 Content-Type: application/json
 
 {
-  "email": "YOUR_EMAIL",
-  "password": "YOUR_PASSWORD"
+  "email": "candlezerg@gmail.com",
+  "password": "rkaehd14!!??"
 }
 
 ### 2. 로그인 응답의 access_token을 위 accessToken에 사용 (publishable key 아님)
