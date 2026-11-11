@@ -26,6 +26,18 @@
           if (page.length < 500) return rows;
         }
       },
+      async loadOverdue(today = localDate()) {
+        const rows = [];
+        for (let start = 0; ; start += 500) {
+          const page = await result(client.from(table)
+            .select('id,text,done,task_date,created_at')
+            .lt('task_date', today).eq('done', false)
+            .order('task_date').order('created_at').order('id')
+            .range(start, start + 499));
+          rows.push(...page);
+          if (page.length < 500) return rows;
+        }
+      },
       async add(text, day = localDate()) {
         const trimmed = text.trim();
         if (!trimmed || Array.from(trimmed).length > 120) throw new Error('할 일을 1~120자로 입력하세요.');

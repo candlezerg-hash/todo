@@ -17,7 +17,15 @@ account.innerHTML = `
   <div class="date-controls"><label for="task-date">계획 날짜</label><input id="task-date" type="date" required><button id="refresh" type="button" class="account-button">불러오기</button></div>
   <p id="connection-status" role="status" aria-live="polite"></p>`;
 planner.insertBefore(account, $('#task-form'));
-let tasks = [], user = null, pending = 0, revision = 0, client, api;
+const overdueSection = document.createElement('section');
+overdueSection.className = 'overdue-section';
+overdueSection.hidden = true;
+overdueSection.setAttribute('aria-labelledby', 'overdue-title');
+overdueSection.innerHTML = `<h3 id="overdue-title">지난 미완료 할 일 <span id="overdue-count"></span></h3>
+  <p class="overdue-description">오늘 이전에 끝내지 못한 할 일이에요. 원래 날짜를 유지하며 지금 완료할 수 있어요.</p>
+  <ul id="overdue-tasks"></ul><p id="overdue-empty">지난 미완료 할 일이 없어요.</p>`;
+planner.append(overdueSection);
+let tasks = [], overdueTasks = [], user = null, pending = 0, revision = 0, client, api;
 const dateString = date => [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-');
 let day = dateString(new Date());
 $('#task-date').value = day;
@@ -32,23 +40,43 @@ function controls() {
   for(const el of [$('#task-input'),$('#task-form button'),$('#task-date'),$('#refresh')]) el.disabled = busy || !user;
   $('#logout').disabled = busy;
   $('#clear').disabled = busy || !user || !tasks.some(t=>t.done);
-  for(const el of document.querySelectorAll('#tasks input, #tasks button')) el.disabled = busy;
+  for(const el of document.querySelectorAll('#tasks input, #tasks button, #overdue-tasks input, #overdue-tasks button')) el.disabled = busy || !user;
   planner.setAttribute('aria-busy',String(busy));
 }
-function render() {
-  const list = $('#tasks'); list.replaceChildren();
-  for(const task of tasks) {
+function saveTask(saved) {
+  tasks=tasks.map(t=>t.id===saved.id?saved:t);
+  overdueTasks=overdueTasks.filter(t=>t.id!==saved.id);
+  if(!saved.done && saved.task_date < dateString(new Date())) {
+    overdueTasks.push(saved);
+    overdueTasks.sort((a,b)=>a.task_date.localeCompare(b.task_date)||a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id));
+  }
+}
+function renderList(list, rows, showDate=false) {
+  list.replaceChildren();
+  for(const task of rows) {
     const row=document.createElement('li'); row.classList.toggle('done',task.done);
     const check=document.createElement('input');check.type='checkbox';check.checked=task.done;check.setAttribute('aria-label',task.text+' 완료');
     check.addEventListener('change',()=>{
       const value=check.checked;check.checked=task.done;
-      run(async()=>{const saved=await api.setDone(task.id,value);tasks=tasks.map(t=>t.id===saved.id?saved:t);},'완료 상태를 저장했습니다.');
+      run(async()=>{const saved=await api.setDone(task.id,value);saveTask(saved);},'완료 상태를 저장했습니다.');
     });
     const text=document.createElement('span');text.className='text';text.textContent=task.text;
+    if(showDate) {
+      const date=document.createElement('time');date.className='task-original-date';date.dateTime=task.task_date;date.textContent=task.task_date;
+      text.prepend(date);
+      check.setAttribute('aria-label',task.task_date+' '+task.text+' 완료');
+    }
     const remove=document.createElement('button');remove.type='button';remove.className='delete';remove.textContent='×';remove.setAttribute('aria-label',task.text+' 삭제');
-    remove.addEventListener('click',()=>run(async()=>{await api.remove(task.id);tasks=tasks.filter(t=>t.id!==task.id);},'삭제했습니다.'));
+    remove.addEventListener('click',()=>run(async()=>{await api.remove(task.id);tasks=tasks.filter(t=>t.id!==task.id);overdueTasks=overdueTasks.filter(t=>t.id!==task.id);},'삭제했습니다.'));
     row.append(check,text,remove);list.append(row);
   }
+}
+function render() {
+  renderList($('#tasks'),tasks);
+  renderList($('#overdue-tasks'),overdueTasks,true);
+  overdueSection.hidden=!user;
+  $('#overdue-count').textContent=`${overdueTasks.length}개`;
+  $('#overdue-empty').hidden=overdueTasks.length>0;
   const done=tasks.filter(t=>t.done).length, percent=tasks.length?Math.round(done/tasks.length*100):0;
   $('#count').textContent=tasks.length;$('#progress-text').textContent=`${tasks.length}개 중 ${done}개 완료`;
   $('#percentage').textContent=`${percent}%`;$('#progress-bar').style.width=`${percent}%`;
@@ -69,15 +97,15 @@ async function load() {
   const current=revision, selectedDay=day;
   pending++;controls();message('계획을 불러오는 중…');
   try{
-    const rows=await api.load(selectedDay);
-    if(current===revision){tasks=rows;message('저장한 계획을 불러왔습니다.');}
+    const [rows, overdue]=await Promise.all([api.load(selectedDay),api.loadOverdue(dateString(new Date()))]);
+    if(current===revision){tasks=rows;overdueTasks=overdue;message('저장한 계획을 불러왔습니다.');}
   }catch(error){if(current===revision)message('불러오지 못했습니다. 인터넷 연결을 확인한 뒤 불러오기를 다시 눌러주세요.',true);}
   finally{pending--;if(current===revision)render();else controls();}
 }
 function sessionChanged(session) {
   const next=session?.user||null;
   if(next?.id===user?.id)return;
-  revision++;user=next;tasks=[];$('#task-input').value='';$('#password').value='';render();
+  revision++;user=next;tasks=[];overdueTasks=[];$('#task-input').value='';$('#password').value='';render();
   if(user)load();else message('로그인하면 다른 기기에서도 같은 계획을 사용할 수 있어요.');
 }
 $('#login-form').addEventListener('submit',async event=>{
@@ -98,7 +126,7 @@ $('#logout').addEventListener('click',async()=>{
 });
 $('#task-form').addEventListener('submit',event=>{
   event.preventDefault();const text=$('#task-input').value.trim();if(!text)return;
-  run(async()=>{const saved=await api.add(text,day);tasks.push(saved);$('#task-input').value='';},'새 계획을 저장했습니다.');
+  run(async()=>{const saved=await api.add(text,day);tasks.push(saved);saveTask(saved);$('#task-input').value='';},'새 계획을 저장했습니다.');
 });
 $('#clear').addEventListener('click',()=>run(async()=>{
   const removed=await api.clearDone(day);const ids=new Set(removed.map(t=>t.id));tasks=tasks.filter(t=>!ids.has(t.id));
@@ -108,7 +136,7 @@ $('#task-date').addEventListener('change',()=>{
   const value=$('#task-date').value;
   if(!value){$('#task-date').value=day;return;}
   if(!user||pending)return;
-  day=value;revision++;tasks=[];render();load();
+  day=value;revision++;tasks=[];overdueTasks=[];render();load();
 });
 render();
 try{
