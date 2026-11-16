@@ -20,8 +20,14 @@ planner.insertBefore(account, $('#task-form'));
 const completedSummary = document.createElement('section');
 completedSummary.className = 'completed-summary';
 completedSummary.setAttribute('aria-label', '전체 완료한 할 일');
-completedSummary.innerHTML = '<span>지금까지 완료한 일</span><strong id="completed-total" role="status" aria-live="polite">—</strong><small>전체 날짜 기준 · 삭제한 항목 제외</small>';
+completedSummary.innerHTML = `<span>지금까지 완료한 일</span><strong id="completed-total" role="status" aria-live="polite">—</strong>
+  <div id="level-details" hidden><div class="level-heading"><strong id="level-number"></strong><span id="total-xp"></span></div>
+    <label for="level-progress" id="level-next"></label><progress id="level-progress" max="10" value="0"></progress>
+    <p class="level-rule">완료 1개 = 1 XP · 10 XP마다 레벨업 · 레벨 제한 없음</p></div>
+  <small>전체 날짜 기준 · 완료 해제·삭제 시 경험치도 줄어들어요.</small>`;
 planner.insertBefore(completedSummary, account);
+const XP_PER_LEVEL = 10;
+function levelFor(xp) { return Math.floor(xp / XP_PER_LEVEL) + 1; }
 let completedTotal = null;
 async function refreshCompleted() {
   const current = revision;
@@ -88,6 +94,15 @@ function renderList(list, rows, showDate=false) {
 }
 function render() {
   $('#completed-total').textContent = !user ? '로그인 후 확인' : completedTotal === null ? '집계 확인 필요' : completedTotal.toLocaleString('ko-KR') + '개';
+  $('#level-details').hidden = !user || completedTotal === null;
+  if(user && completedTotal !== null) {
+    const level = levelFor(completedTotal), progress = completedTotal % XP_PER_LEVEL;
+    $('#level-number').textContent = `Lv. ${level.toLocaleString('ko-KR')}`;
+    $('#total-xp').textContent = `총 ${completedTotal.toLocaleString('ko-KR')} XP`;
+    $('#level-next').textContent = `다음 레벨까지 ${XP_PER_LEVEL - progress} XP (${progress}/${XP_PER_LEVEL})`;
+    $('#level-progress').max = XP_PER_LEVEL;
+    $('#level-progress').value = progress;
+  }
   renderList($('#tasks'),tasks);
   renderList($('#overdue-tasks'),overdueTasks,true);
   overdueSection.hidden=!user;
@@ -103,9 +118,9 @@ function render() {
 }
 async function run(action, success) {
   if(pending || !user)return;
-  const current=revision;
+  const current=revision, previousTotal=completedTotal;
   pending++;controls();message('처리 중…');
-  try{await action();if(current===revision){await refreshCompleted();message(success);}}
+  try{await action();if(current===revision){await refreshCompleted();if(current===revision)message(previousTotal !== null && completedTotal !== null && levelFor(completedTotal) > levelFor(previousTotal) ? `${success} 레벨업! Lv. ${levelFor(completedTotal).toLocaleString('ko-KR')} 달성!` : success);}}
   catch(error){if(current===revision)message('처리하지 못했습니다. 인터넷 연결과 로그인 상태를 확인하고 다시 시도하세요.',true);}
   finally{pending--;if(current===revision)render();else controls();}
 }

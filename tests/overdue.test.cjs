@@ -85,6 +85,33 @@ test('completed total refreshes after changes, survives date selection, and clea
   assert.equal(select('#completed-total').textContent, '로그인 후 확인');
 });
 
+test('levels start at one, advance at each ten XP, and have no level cap', () => {
+  const { select, evaluate } = appContext();
+  for (const [xp, level, progress] of [[0,1,0],[9,1,9],[10,2,0],[19,2,9],[20,3,0],[10000,1001,0]]) {
+    evaluate(`user={id:'a'};completedTotal=${xp};render();`);
+    assert.equal(select('#level-number').textContent, `Lv. ${level.toLocaleString('ko-KR')}`);
+    assert.equal(select('#level-progress').value, progress);
+    assert.equal(select('#level-details').hidden, false);
+  }
+  evaluate('completedTotal=null;render();');
+  assert.equal(select('#level-details').hidden, true);
+  evaluate('user=null;completedTotal=20;render();');
+  assert.equal(select('#level-details').hidden, true);
+});
+
+test('level-up is announced on crossing a threshold; undo recalculates XP and level', async () => {
+  const { select, evaluate } = appContext();
+  evaluate("user={id:'a'};completedTotal=9;api={countCompleted:async()=>10};render();");
+  await evaluate('run(async()=>{},"saved")');
+  assert.match(select('#connection-status').textContent, /레벨업! Lv\. 2/);
+  assert.equal(select('#level-progress').value, 0);
+  evaluate('api.countCompleted=async()=>9');
+  await evaluate('run(async()=>{},"saved")');
+  assert.equal(select('#connection-status').textContent, 'saved');
+  assert.equal(select('#level-number').textContent, 'Lv. 1');
+  assert.equal(select('#level-progress').value, 9);
+});
+
 test('complete, reopen, and delete past tasks across both lists', async () => {
   const { select, evaluate } = appContext();
   evaluate(`user={id:'a'};
