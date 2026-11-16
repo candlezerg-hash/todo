@@ -50,6 +50,41 @@ function appContext() {
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
+test('completed total uses an exact count across all dates and propagates errors', async () => {
+  const context = vm.createContext({}), calls = [];
+  vm.runInContext(source('supabase/tasks-api.js'), context);
+  const query = {
+    select: (...args) => { calls.push(['select', ...args]); return query; },
+    eq: (...args) => { calls.push(['eq', ...args]); return Promise.resolve({ count: 1501, error: null }); }
+  };
+  const api = context.createTasksApi({ from: () => query });
+  assert.equal(await api.countCompleted(), 1501);
+  assert.equal(calls[0][2].count, 'exact');
+  assert.equal(calls[0][2].head, true);
+  assert.deepEqual(calls[1], ['eq', 'done', true]);
+  query.eq = async () => ({ error: new Error('offline') });
+  await assert.rejects(api.countCompleted(), /offline/);
+});
+
+test('completed total refreshes after changes, survives date selection, and clears on logout', async () => {
+  const { select, evaluate } = appContext();
+  evaluate("user={id:'a'};api={countCompleted:async()=>12};");
+  await evaluate('refreshCompleted();');
+  evaluate('render();');
+  assert.equal(select('#completed-total').textContent, '12개');
+  await evaluate('run(async()=>{api.countCompleted=async()=>13;},"saved")');
+  assert.equal(select('#completed-total').textContent, '13개');
+  evaluate("day='2000-01-01';tasks=[];render();");
+  assert.equal(select('#completed-total').textContent, '13개');
+  evaluate("api.countCompleted=async()=>{throw new Error('offline')}");
+  await evaluate('refreshCompleted();');
+  evaluate('render();');
+  assert.equal(select('#completed-total').textContent, '집계 확인 필요');
+  evaluate('sessionChanged(null)');
+  assert.equal(evaluate('completedTotal'), null);
+  assert.equal(select('#completed-total').textContent, '로그인 후 확인');
+});
+
 test('complete, reopen, and delete past tasks across both lists', async () => {
   const { select, evaluate } = appContext();
   evaluate(`user={id:'a'};

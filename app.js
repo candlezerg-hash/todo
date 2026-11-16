@@ -17,6 +17,21 @@ account.innerHTML = `
   <div class="date-controls"><label for="task-date">계획 날짜</label><input id="task-date" type="date" required><button id="refresh" type="button" class="account-button">불러오기</button></div>
   <p id="connection-status" role="status" aria-live="polite"></p>`;
 planner.insertBefore(account, $('#task-form'));
+const completedSummary = document.createElement('section');
+completedSummary.className = 'completed-summary';
+completedSummary.setAttribute('aria-label', '전체 완료한 할 일');
+completedSummary.innerHTML = '<span>지금까지 완료한 일</span><strong id="completed-total" role="status" aria-live="polite">—</strong><small>전체 날짜 기준 · 삭제한 항목 제외</small>';
+planner.insertBefore(completedSummary, account);
+let completedTotal = null;
+async function refreshCompleted() {
+  const current = revision;
+  try {
+    const count = await api.countCompleted();
+    if (current === revision) completedTotal = count;
+  } catch (error) {
+    if (current === revision) completedTotal = null;
+  }
+}
 const overdueSection = document.createElement('section');
 overdueSection.className = 'overdue-section';
 overdueSection.hidden = true;
@@ -72,6 +87,7 @@ function renderList(list, rows, showDate=false) {
   }
 }
 function render() {
+  $('#completed-total').textContent = !user ? '로그인 후 확인' : completedTotal === null ? '집계 확인 필요' : completedTotal.toLocaleString('ko-KR') + '개';
   renderList($('#tasks'),tasks);
   renderList($('#overdue-tasks'),overdueTasks,true);
   overdueSection.hidden=!user;
@@ -89,7 +105,7 @@ async function run(action, success) {
   if(pending || !user)return;
   const current=revision;
   pending++;controls();message('처리 중…');
-  try{await action();if(current===revision)message(success);}
+  try{await action();if(current===revision){await refreshCompleted();message(success);}}
   catch(error){if(current===revision)message('처리하지 못했습니다. 인터넷 연결과 로그인 상태를 확인하고 다시 시도하세요.',true);}
   finally{pending--;if(current===revision)render();else controls();}
 }
@@ -97,7 +113,7 @@ async function load() {
   const current=revision, selectedDay=day;
   pending++;controls();message('계획을 불러오는 중…');
   try{
-    const [rows, overdue]=await Promise.all([api.load(selectedDay),api.loadOverdue(dateString(new Date()))]);
+    const [rows, overdue]=await Promise.all([api.load(selectedDay),api.loadOverdue(dateString(new Date())),refreshCompleted()]);
     if(current===revision){tasks=rows;overdueTasks=overdue;message('저장한 계획을 불러왔습니다.');}
   }catch(error){if(current===revision)message('불러오지 못했습니다. 인터넷 연결을 확인한 뒤 불러오기를 다시 눌러주세요.',true);}
   finally{pending--;if(current===revision)render();else controls();}
@@ -105,7 +121,7 @@ async function load() {
 function sessionChanged(session) {
   const next=session?.user||null;
   if(next?.id===user?.id)return;
-  revision++;user=next;tasks=[];overdueTasks=[];$('#task-input').value='';$('#password').value='';render();
+  revision++;user=next;completedTotal=null;tasks=[];overdueTasks=[];$('#task-input').value='';$('#password').value='';render();
   if(user)load();else message('로그인하면 다른 기기에서도 같은 계획을 사용할 수 있어요.');
 }
 $('#login-form').addEventListener('submit',async event=>{

@@ -38,6 +38,12 @@
           if (page.length < 500) return rows;
         }
       },
+      async countCompleted() {
+        const { count, error } = await client.from(table)
+          .select('id', { count: 'exact', head: true }).eq('done', true);
+        if (error) throw error;
+        return count;
+      },
       async add(text, day = localDate()) {
         const trimmed = text.trim();
         if (!trimmed || Array.from(trimmed).length > 120) throw new Error('할 일을 1~120자로 입력하세요.');
