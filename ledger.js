@@ -1,16 +1,27 @@
 'use strict';
 (function () {
-  const accounts = {bank:'은행 잔고',credit:'PayPay 크레딧',paypay:'PayPay 잔고'};
+  const accounts = {bank:'은행 잔고',credit:'PayPay 크레딧',paypay:'PayPay 잔고',cash:'현금'};
   const categories = {fixed:'고정지출',food:'식비',hobby:'취미',transport:'교통',shopping:'쇼핑',other:'기타'};
   const yen = n => new Intl.NumberFormat('ko-KR',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(n);
   function summarize(rows, month) {
-    const balances={bank:0,credit:0,paypay:0}, totals=Object.fromEntries(Object.keys(categories).map(k=>[k,0]));
+    const balances=Object.fromEntries(Object.keys(accounts).map(k=>[k,0])), totals=Object.fromEntries(Object.keys(categories).map(k=>[k,0]));
     const expenses=rows.filter(r=>r.kind==='expense' && r.spent_on.slice(0,7)===month);
     for(const row of rows) balances[row.account]+=Number(row.amount);
     for(const row of expenses) totals[row.category]-=Number(row.amount);
     return {balances,totals,expenses,total:Object.values(totals).reduce((a,b)=>a+b,0)};
   }
   globalThis.ledgerSummary=summarize;
+  function errorMessage(error) {
+    const code=String(error?.code||''), detail=String(error?.message||'');
+    if(code==='PGRST205'||code==='42P01')return '가계부 테이블을 찾지 못했습니다. Supabase SQL Editor에서 supabase/ledger.sql 파일 전체를 실행한 뒤 새로고침하세요.';
+    if(code==='PGRST202'||code==='42883')return '가계부 저장 함수를 찾지 못했습니다. ledger.sql의 함수 정의와 권한 설정이 적용되었는지 확인하세요.';
+    if(code==='42501')return '가계부 접근 권한이 없습니다. ledger.sql의 권한 설정을 확인하고 다시 로그인하세요.';
+    if(code==='PGRST301'||code==='PGRST303'||detail==='Login required')return '로그인 세션이 만료되었습니다. 로그아웃 후 다시 로그인하세요.';
+    if(detail==='Insufficient balance')return '잔액이 부족합니다. 잔액을 조정하거나 금액을 확인하세요.';
+    if(/fetch|network|load failed/i.test(detail))return '서버에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 새로고침하세요.';
+    return '가계부 요청에 실패했습니다. '+(code?`[${code}] `:'')+(detail||'알 수 없는 오류');
+  }
+  globalThis.ledgerErrorMessage=errorMessage;
   if(typeof document==='undefined')return;
   const host=document.querySelector('.planner');
   const todo=document.createElement('div');todo.id='todo-panel';todo.setAttribute('role','tabpanel');todo.setAttribute('aria-labelledby','todo-tab');
@@ -79,7 +90,7 @@
       const loaded=await fetchRows();if(current!==epoch)return;rows=loaded;ready=true;
       if(saved&&action.form){action.form.reset();action.form.elements.date.value=dateString(new Date());}
       status(success);
-    }catch(error){if(current===epoch){ready=false;status(saved?'저장은 완료했지만 조회하지 못했습니다. 새로고침해 주세요.':error.message==='Insufficient balance'?'잔액이 부족합니다. 잔액을 조정하거나 금액을 확인하세요.':'저장·조회하지 못했습니다. 연결과 로그인을 확인하세요. 최초 사용 시 ledger.sql을 Supabase SQL Editor에서 실행해야 합니다.',true);}}
+    }catch(error){if(current===epoch){ready=false;status((saved?'저장은 완료됐습니다. 다시 저장하지 말고 새로고침하세요. ':'')+errorMessage(error),true);}}
     finally{if(current===epoch){busy=false;renderLedger();}}
   }
   for(const id of ['balance-form','expense-form'])q('#'+id).addEventListener('submit',event=>{

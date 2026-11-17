@@ -1,9 +1,9 @@
 -- 기존 프로젝트의 SQL Editor에서 한 번 실행하세요. 할 일 테이블은 변경하지 않습니다.
 begin;
-create table public.little_plan_ledger (
+create table if not exists public.little_plan_ledger (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  account text not null check (account in ('bank','credit','paypay')),
+  account text not null check (account in ('bank','credit','paypay','cash')),
   kind text not null check (kind in ('expense','adjustment')),
   amount bigint not null check (abs(amount::numeric) <= 1000000000000),
   spent_on date not null,
@@ -13,15 +13,16 @@ create table public.little_plan_ledger (
   check ((kind='adjustment' and category is null) or
     (kind='expense' and amount<0 and category is not null and category in ('fixed','food','hobby','transport','shopping','other')))
 );
-create index little_plan_ledger_owner_date on public.little_plan_ledger(user_id,spent_on,created_at,id);
+create index if not exists little_plan_ledger_owner_date on public.little_plan_ledger(user_id,spent_on,created_at,id);
 alter table public.little_plan_ledger enable row level security;
 revoke all on public.little_plan_ledger from anon, authenticated;
 grant select on public.little_plan_ledger to authenticated;
+drop policy if exists "read own ledger" on public.little_plan_ledger;
 create policy "read own ledger" on public.little_plan_ledger for select to authenticated
 using ((select auth.uid())=user_id);
 
 -- 残高確認と記録を同じトランザクションで実行。
-create function public.little_plan_record(p_account text,p_amount bigint,p_date date,p_merchant text,p_category text,p_kind text)
+create or replace function public.little_plan_record(p_account text,p_amount bigint,p_date date,p_merchant text,p_category text,p_kind text)
 returns uuid language plpgsql security definer set search_path=public,pg_temp as $$
 declare owner uuid:=auth.uid(); current_balance bigint; delta bigint; entry_id uuid;
 begin
@@ -38,7 +39,7 @@ begin
     values(owner,p_account,p_kind,delta,p_date,btrim(p_merchant),p_category) returning id into entry_id;
   return entry_id;
 end $$;
-create function public.little_plan_cancel_expense(p_id uuid)
+create or replace function public.little_plan_cancel_expense(p_id uuid)
 returns void language plpgsql security definer set search_path=public,pg_temp as $$
 declare owner uuid:=auth.uid();
 begin

@@ -4,6 +4,15 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../ledger.js'),'utf8');
+test('connection errors distinguish missing setup, permission, session, and network failures',()=>{
+  const ctx=vm.createContext({Intl});vm.runInContext(source,ctx);
+  for(const code of ['PGRST205','42P01'])assert.match(ctx.ledgerErrorMessage({code}),/파일 전체/);
+  assert.match(ctx.ledgerErrorMessage({code:'PGRST202'}),/저장 함수/);
+  assert.match(ctx.ledgerErrorMessage({code:'42501'}),/접근 권한/);
+  assert.match(ctx.ledgerErrorMessage({code:'PGRST301'}),/세션이 만료/);
+  assert.match(ctx.ledgerErrorMessage({message:'Failed to fetch'}),/서버에 연결/);
+  assert.match(ctx.ledgerErrorMessage({code:'UNKNOWN',message:'specific error'}),/\[UNKNOWN\] specific error/);
+});
 test('balances include all dates and adjustments; monthly statistics include only expenses',()=>{
   const ctx=vm.createContext({Intl});vm.runInContext(source,ctx);
   const rows=[
@@ -13,12 +22,15 @@ test('balances include all dates and adjustments; monthly statistics include onl
     {account:'credit',kind:'adjustment',amount:10000,spent_on:'2026-11-01'},
     {account:'credit',kind:'expense',amount:-500,category:'hobby',spent_on:'2026-11-30'},
     {account:'paypay',kind:'adjustment',amount:1000,spent_on:'2026-11-01'},
-    {account:'paypay',kind:'expense',amount:-200,category:'food',spent_on:'2026-12-01'}
+    {account:'paypay',kind:'expense',amount:-200,category:'food',spent_on:'2026-12-01'},
+    {account:'cash',kind:'adjustment',amount:5000,spent_on:'2026-11-01'},
+    {account:'cash',kind:'expense',amount:-800,category:'food',spent_on:'2026-11-17'}
   ];
   const data=ctx.ledgerSummary(rows,'2026-11');
   assert.equal(data.balances.bank,45000);assert.equal(data.balances.credit,9500);assert.equal(data.balances.paypay,800);
-  assert.equal(data.total,3500);assert.equal(data.totals.food,0);assert.equal(data.totals.fixed,3000);assert.equal(data.expenses.length,2);
-  const empty=ctx.ledgerSummary([],'2027-01');assert.equal(empty.total,0);assert.equal(empty.balances.bank,0);
+  assert.equal(data.balances.cash,4200);
+  assert.equal(data.total,4300);assert.equal(data.totals.food,800);assert.equal(data.totals.fixed,3000);assert.equal(data.expenses.length,3);
+  const empty=ctx.ledgerSummary([],'2027-01');assert.equal(empty.total,0);assert.equal(empty.balances.bank,0);assert.equal(empty.balances.cash,0);
 });
 
 function screen(){

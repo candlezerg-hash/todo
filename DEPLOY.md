@@ -1,5 +1,7 @@
 # Supabase 연결판 배포
 
+현금 관리 추가: 기존 가계부를 사용 중이라면 `supabase/add-cash.sql` 전체를 SQL Editor에서 실행하세요. 기존 내역은 유지됩니다. `ledger.js`, `style.css`도 함께 배포하세요. 신규 설치 및 가계부 초기화 SQL에는 현금이 이미 포함되어 있습니다.
+
 연결판은 Supabase 로그인 후 날짜별 할 일을 불러오고, 추가·완료 변경·삭제·완료 항목 정리를 DB에 저장합니다. 비밀번호나 REST 테스트의 access_token을 소스에 넣지 않습니다. 세션 갱신은 supabase-js가 처리합니다.
 
 ## GitHub Pages에 반영
