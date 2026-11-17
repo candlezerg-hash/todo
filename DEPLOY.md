@@ -14,9 +14,12 @@ style.css
 app.js
 config.js
 ledger.js
+japanese.js
 supabase/
   tasks-api.js
 ```
+
+일본어 한마디 탭: `supabase/japanese.sql` 전체를 SQL Editor에서 실행하세요. 기존 할 일·가계부 내역은 유지됩니다. `index.html`, `app.js`, `ledger.js`, `japanese.js`, `style.css`를 함께 배포합니다. 일본어 표현·뜻·선택 발음을 등록하고, 읽음 버튼을 누를 때만 해당 표현의 읽은 횟수가 1 증가합니다. 적게 읽은 표현의 추첨 가중치는 `1 / (읽은 횟수 + 1)`이며 직전 카드는 가중치를 1/4로 줄입니다. 무작위 추첨이므로 같은 표현이 다시 나올 수 있습니다. 통계와 표현은 로그인 사용자별로 저장됩니다.
 
 가계부를 처음 추가할 때는 `supabase/ledger.sql`을 Supabase SQL Editor에서 한 번 실행하세요. 기존 `setup.sql`을 다시 실행할 필요는 없습니다. 이 작업은 가계부 전용 테이블·사용자별 조회 정책·잔액 차감 함수를 추가합니다. SQL 적용 전에는 할 일을 계속 사용할 수 있지만 가계부는 연결 오류를 표시합니다.
 

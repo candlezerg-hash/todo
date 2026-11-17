@@ -106,8 +106,15 @@
   q('#ledger-refresh').addEventListener('click',()=>perform(null,'잔액과 내역을 불러왔습니다.'));
   q('#ledger-month').addEventListener('change',()=>{if(q('#ledger-month').value)renderLedger();});
   const tabButtons=[...tabs.querySelectorAll('button')];
-  function activate(index){tabButtons.forEach((button,i)=>{button.setAttribute('aria-selected',String(i===index));button.tabIndex=i===index?0:-1;});todo.hidden=index!==0;panel.hidden=index!==1;account.querySelector('.date-controls').hidden=index!==0;if(index===1&&user&&!ready)perform(null,'잔액과 내역을 불러왔습니다.');}
-  tabButtons.forEach((button,i)=>{button.addEventListener('click',()=>activate(i));button.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight'||event.key==='ArrowLeft')next=1-i;else if(event.key==='Home')next=0;else if(event.key==='End')next=1;else return;event.preventDefault();activate(next);tabButtons[next].focus();});});
+  const tabPanels=[todo,panel],onOpen=[()=>{},()=>{if(user&&!ready)perform(null,'잔액과 내역을 불러왔습니다.');}];
+  function activate(index){tabButtons.forEach((button,i)=>{button.setAttribute('aria-selected',String(i===index));button.tabIndex=i===index?0:-1;tabPanels[i].hidden=i!==index;});account.querySelector('.date-controls').hidden=index!==0;onOpen[index]();}
+  function bindTab(button,i){button.addEventListener('click',()=>activate(i));button.addEventListener('keydown',event=>{let next;if(event.key==='ArrowRight')next=(i+1)%tabButtons.length;else if(event.key==='ArrowLeft')next=(i+tabButtons.length-1)%tabButtons.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabButtons.length-1;else return;event.preventDefault();activate(next);tabButtons[next].focus();});}
+  tabButtons.forEach(bindTab);
+  globalThis.registerNoteTab=({id,label,panel:extra,open})=>{
+    const button=document.createElement('button');button.id=id+'-tab';button.type='button';button.textContent=label;button.setAttribute('role','tab');button.setAttribute('aria-selected','false');button.setAttribute('aria-controls',extra.id);button.tabIndex=-1;
+    extra.hidden=true;extra.setAttribute('role','tabpanel');extra.setAttribute('aria-labelledby',button.id);
+    const index=tabButtons.length;tabButtons.push(button);tabPanels.push(extra);onOpen.push(open);tabs.append(button);host.append(extra);bindTab(button,index);
+  };
   globalThis.ledgerSessionChanged=()=>{epoch++;rows=[];ready=false;busy=false;q('#expense-form').reset();q('#expense-form').elements.date.value=dateString(new Date());q('#balance-form').reset();status(user?'가계부 탭을 열면 기록을 불러옵니다.':'로그인 후 이용할 수 있어요.');renderLedger();if(user&&!panel.hidden)perform(null,'잔액과 내역을 불러왔습니다.');};
   globalThis.ledgerSessionChanged();
 })();
