@@ -29,8 +29,11 @@ test('balances include all dates and adjustments; monthly statistics include onl
   const data=ctx.ledgerSummary(rows,'2026-11');
   assert.equal(data.balances.bank,45000);assert.equal(data.balances.credit,9500);assert.equal(data.balances.paypay,800);
   assert.equal(data.balances.cash,4200);
+  assert.equal(data.balanceTotal,59500);
+  assert.equal(ctx.ledgerSummary(rows,'2027-01').balanceTotal,59500);
   assert.equal(data.total,4300);assert.equal(data.totals.food,800);assert.equal(data.totals.fixed,3000);assert.equal(data.expenses.length,3);
   const empty=ctx.ledgerSummary([],'2027-01');assert.equal(empty.total,0);assert.equal(empty.balances.bank,0);assert.equal(empty.balances.cash,0);
+  assert.equal(empty.balanceTotal,0);
 });
 
 function screen(){

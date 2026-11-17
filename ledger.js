@@ -8,7 +8,7 @@
     const expenses=rows.filter(r=>r.kind==='expense' && r.spent_on.slice(0,7)===month);
     for(const row of rows) balances[row.account]+=Number(row.amount);
     for(const row of expenses) totals[row.category]-=Number(row.amount);
-    return {balances,totals,expenses,total:Object.values(totals).reduce((a,b)=>a+b,0)};
+    return {balances,balanceTotal:Object.values(balances).reduce((a,b)=>a+b,0),totals,expenses,total:Object.values(totals).reduce((a,b)=>a+b,0)};
   }
   globalThis.ledgerSummary=summarize;
   function errorMessage(error) {
@@ -34,6 +34,7 @@
     <p class="ledger-help">엔(¥) 기준 · PayPay 크레딧은 사용 가능액을 입력하세요. 실제 결제나 계좌 연동 없이 기록만 관리합니다.</p>
     <p id="ledger-status" role="status" aria-live="polite">로그인 후 이용할 수 있어요.</p>
     <button id="ledger-refresh" class="account-button" type="button">잔액·내역 새로고침</button>
+    <div class="ledger-balance-total"><span>잔액 총액</span><strong id="ledger-balance-total" role="status" aria-live="polite">—</strong><small>은행 + PayPay 크레딧 사용 가능액 + PayPay 잔고 + 현금</small></div>
     <div id="ledger-balances" class="ledger-balances"></div>
     <form id="balance-form" class="ledger-form"><h3>현재 잔액 설정·조정</h3>
       <label>자금<select name="account">${options(accounts)}</select></label><label>현재 잔액 (¥)<input name="amount" type="number" min="0" max="1000000000000" step="1" required></label>
@@ -53,6 +54,7 @@
   function controls(){for(const el of panel.querySelectorAll('button,input,select'))el.disabled=busy||!user||(!ready&&el.id!=='ledger-refresh');panel.setAttribute('aria-busy',String(busy));}
   function renderLedger(){
     const data=summarize(rows,q('#ledger-month').value);
+    q('#ledger-balance-total').textContent=ready?yen(data.balanceTotal):'—';
     q('#ledger-balances').replaceChildren();
     for(const [key,label] of Object.entries(accounts)){
       const card=document.createElement('div');const title=document.createElement('span'),value=document.createElement('strong');
