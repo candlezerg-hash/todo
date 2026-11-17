@@ -11,9 +11,14 @@ index.html
 style.css
 app.js
 config.js
+ledger.js
 supabase/
   tasks-api.js
 ```
+
+가계부를 처음 추가할 때는 `supabase/ledger.sql`을 Supabase SQL Editor에서 한 번 실행하세요. 기존 `setup.sql`을 다시 실행할 필요는 없습니다. 이 작업은 가계부 전용 테이블·사용자별 조회 정책·잔액 차감 함수를 추가합니다. SQL 적용 전에는 할 일을 계속 사용할 수 있지만 가계부는 연결 오류를 표시합니다.
+
+가계부는 엔 단위이며 은행 잔고, PayPay 크레딧 사용 가능액, PayPay 잔고를 직접 설정합니다. 실제 계좌·결제 서비스와 연동하지 않습니다. 지출 기록은 해당 자금에서 차감되고, 취소하면 복원됩니다. 잔액 조정은 월별 지출 통계에 포함되지 않습니다. 월별 통계는 사용 날짜 기준으로 카테고리·자금별 합계를 표시합니다. PayPay 크레딧 결제일 자동 출금이나 자금 간 이체는 포함하지 않습니다.
 
 기존 파일을 교체하고 Commit changes를 누릅니다. GitHub Pages 배포가 완료되면 https://candlezerg-hash.github.io/todo/ 에서 강력 새로고침합니다. 요청 테스트 파일 requests.http는 비밀번호와 토큰이 들어 있을 수 있으므로 업로드하지 않습니다. SQL 파일도 웹 배포에 필요하지 않습니다.
 
