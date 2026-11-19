@@ -139,6 +139,7 @@ function sessionChanged(session) {
   revision++;user=next;completedTotal=null;tasks=[];overdueTasks=[];$('#task-input').value='';$('#password').value='';render();
   globalThis.ledgerSessionChanged?.();
   globalThis.japaneseSessionChanged?.();
+  globalThis.crmSessionChanged?.();
   if(user)load();else message('로그인하면 다른 기기에서도 같은 계획을 사용할 수 있어요.');
 }
 $('#login-form').addEventListener('submit',async event=>{
